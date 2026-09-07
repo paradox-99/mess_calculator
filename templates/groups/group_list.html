@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Your groups — Mess Calculator{% endblock %}
+{% block content %}
+    <style>
+        .group-list-page { max-width: 820px; margin: 2.5rem auto; }
+        .group-list-heading { margin-bottom: 1.75rem; }
+        .group-list-heading h1 {
+            margin: 0 0 0.35rem;
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            letter-spacing: -0.03em;
+        }
+        .group-list-heading p { margin: 0; }
+        .groups-card {
+            overflow: hidden;
+            border: 1px solid #d8dce1;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 14px 35px rgba(31, 35, 40, 0.06);
+        }
+        .groups-card table { margin: 0; }
+        .groups-card th {
+            background: #f7f8f5;
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .groups-card th,
+        .groups-card td { padding: 0.9rem 1rem; }
+        .group-name { font-weight: 700; }
+        .group-open { color: #2f6f4f; font-weight: 700; text-decoration: none; }
+        .group-open:hover { text-decoration: underline; }
+        .group-empty {
+            padding: 2rem;
+            border: 1px dashed #b8c5c2;
+            border-radius: 10px;
+            background: #f7fbf8;
+        }
+        .group-empty strong { display: block; margin-bottom: 0.35rem; color: #172b3a; }
+        .group-empty p { margin: 0; }
+        .group-list-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+        .group-list-actions .btn { margin: 0; }
+        @media (max-width: 680px) {
+            .group-list-page { margin: 1.5rem auto; }
+            .group-list-actions .btn { flex: 1 1 100%; text-align: center; }
+        }
+    </style>
+    <section class="group-list-page">
+    <div class="group-list-heading">
+        <h1>Your groups</h1>
+        <p class="muted">Keep your shared meals and balances in one place.</p>
+    </div>
+
+    {% if memberships %}
+        <div class="groups-card">
+            <table>
+                <tr><th>Group</th><th>Your role</th><th></th></tr>
+                {% for membership in memberships %}
+                    <tr>
+                        <td class="group-name">{{ membership.group.name }}</td>
+                        <td>{{ membership.get_role_display }}</td>
+                        <td><a class="group-open" href="{% url 'mess:dashboard' membership.group.pk %}">Open dashboard</a></td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% else %}
+        <div class="group-empty">
+            <strong>You're not in a group yet.</strong>
+            <p class="muted">Create a new mess or use an invite code to join one.</p>
+        </div>
+    {% endif %}
+
+    <p class="group-list-actions">
+        <a class="btn" href="{% url 'groups:create' %}">Create a group</a>
+        <a class="btn" href="{% url 'groups:join' %}">Join a group</a>
+    </p>
+    </section>
+{% endblock %}

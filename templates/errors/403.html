@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Access denied — Mess Calculator{% endblock %}
+{% block content %}
+    <style>
+        .error-page { max-width: 620px; margin: 5rem auto; text-align: center; }
+        .error-code { color: #f2c14e; font-size: 5rem; font-weight: 800; line-height: 1; }
+        .error-page h1 { margin: 1rem 0 0.5rem; color: #172b3a; }
+        .error-page p { color: #5b6470; }
+        .error-page .btn { margin-top: 1rem; background: #0f4c5c; }
+    </style>
+    <section class="error-page">
+        <div class="error-code">403</div>
+        <h1>You don't have access to this page.</h1>
+        <p>Ask the group leader for access or return to your dashboard.</p>
+        <a class="btn" href="{% url 'home' %}">Back home</a>
+    </section>
+{% endblock %}

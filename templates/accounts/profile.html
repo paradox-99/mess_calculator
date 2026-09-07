@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}My profile — Mess Calculator{% endblock %}
+{% block content %}
+    <style>
+        .profile-page { max-width: 920px; margin: 2.5rem auto; }
+        .profile-heading { margin-bottom: 1.75rem; }
+        .profile-heading h1 { margin: 0; color: #172b3a; font-size: clamp(2rem, 5vw, 2.8rem); }
+        .profile-heading p { margin: 0.4rem 0 0; }
+        .profile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+        .profile-card { padding: 1.5rem; border: 1px solid #d8dce1; border-radius: 10px; background: #fff; box-shadow: 0 10px 24px rgba(23, 43, 58, 0.05); }
+        .profile-card h2 { margin: 0 0 0.35rem; color: #0f4c5c; font-size: 1.15rem; }
+        .profile-card > p { margin: 0 0 1.25rem; color: #5b6470; font-size: 0.9rem; }
+        .profile-card input { max-width: none; padding: 0.65rem 0.75rem; border-radius: 6px; }
+        .profile-card button { width: 100%; margin-top: 0.4rem; background: #0f4c5c; font-weight: 700; }
+        .profile-card button:hover { background: #0a3b48; }
+        .profile-password { border-top: 4px solid #e76f51; }
+        .profile-account { border-top: 4px solid #2a9d8f; }
+        .profile-tools { margin-top: 1rem; padding: 1.5rem; border: 1px solid #e5d6a8; border-radius: 10px; background: #fffdf4; }
+        .profile-tools h2 { margin: 0 0 0.35rem; color: #8a6805; font-size: 1.15rem; }
+        .profile-tools p { margin: 0 0 1rem; color: #5b6470; }
+        .profile-tool-links { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+        .profile-tool-links .btn { margin: 0; }
+        .profile-tool-links .btn:first-child { background: #2a9d8f; }
+        .profile-tool-links .btn:first-child:hover { background: #207d72; }
+        .invite-code-profile { display: inline-block; margin-bottom: 1rem; padding: 0.55rem 0.75rem; border-radius: 6px; background: #f2f7e8; color: #315b43; font-weight: 700; }
+        .profile-back { display: inline-block; margin-top: 1.25rem; color: #2f6f4f; font-weight: 700; text-decoration: none; }
+        .profile-back:hover { text-decoration: underline; }
+        @media (max-width: 680px) { .profile-page { margin: 1.5rem auto; } .profile-grid { grid-template-columns: 1fr; } .profile-tool-links .btn { flex: 1 1 100%; text-align: center; } }
+    </style>
+    <section class="profile-page">
+        <div class="profile-heading">
+            <h1>My profile</h1>
+            <p class="muted">Update your account and access your mess tools.</p>
+        </div>
+        <div class="profile-grid">
+            <section class="profile-card profile-account">
+                <h2>Account details</h2>
+                <p>Change your username, name, and email address.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ profile_form.non_field_errors }}
+                    {% for field in profile_form %}
+                        <p><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</p>
+                    {% endfor %}
+                    <button type="submit" name="profile_submit">Save account details</button>
+                </form>
+            </section>
+            <section class="profile-card profile-password">
+                <h2>Change password</h2>
+                <p>Use a strong password you do not reuse elsewhere.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ password_form.non_field_errors }}
+                    {% for field in password_form %}
+                        <p><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</p>
+                    {% endfor %}
+                    <button type="submit" name="password_submit">Update password</button>
+                </form>
+            </section>
+        </div>
+        {% if membership %}
+            <section class="profile-tools">
+                <h2>{{ membership.group.name }}</h2>
+                <p>Monthly tools and group controls for your current mess.</p>
+                {% if membership.role == "leader" %}
+                    <span class="invite-code-profile">Invitation code: {{ membership.group.invite_code }}</span>
+                {% endif %}
+                <div class="profile-tool-links">
+                    <a class="btn" href="{% url 'mess:personal_calculation' membership.group.pk %}">My calculation</a>
+                    {% if membership.role == "leader" %}
+                        <a class="btn" href="{% url 'groups:transfer_leadership' membership.group.pk %}">Transfer leadership</a>
+                    {% endif %}
+                    <a class="btn" href="{% url 'mess:dashboard' membership.group.pk %}">Open dashboard</a>
+                </div>
+            </section>
+        {% endif %}
+        <a class="profile-back" href="{% url 'home' %}">&larr; Back home</a>
+    </section>
+{% endblock %}

@@ -1,0 +1,481 @@
+{% extends "base.html" %}
+{% block title %}{{ group.name }} — {{ month_label }}{% endblock %}
+{% block content %}
+    <style>
+        .dashboard-page {
+            max-width: 1080px;
+            margin: 2.75rem auto;
+        }
+        .dashboard-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+        .dashboard-heading h1 {
+            margin: 0;
+            color: #172b3a;
+            font-size: clamp(2rem, 5vw, 2.75rem);
+            letter-spacing: -0.03em;
+        }
+        .dashboard-heading p {
+            margin: 0.45rem 0 0;
+        }
+        .invite-code {
+            padding: 0.45rem 0.7rem;
+            border: 1px solid #d6e6ad;
+            border-radius: 5px;
+            background: #f2f7e8;
+            color: #315b43;
+            white-space: nowrap;
+        }
+        .month-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            padding: 0.8rem 1rem;
+            border: 1px solid #d8dce1;
+            border-radius: 8px;
+            background: #f8fcfc;
+        }
+        .month-toolbar a {
+            color: #2f6f4f;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .month-toolbar a:hover { text-decoration: underline; }
+        .month-label {
+            color: #0f4c5c;
+            font-weight: 700;
+        }
+        .month-toolbar .month-next-disabled {
+            color: #aeb7bc;
+            cursor: not-allowed;
+            font-weight: 600;
+        }
+        .dashboard-month-select { width: auto; min-width: 170px; max-width: none; padding: 0.5rem 0.65rem; border-color: #b8d5d2; color: #0f4c5c; font-weight: 700; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .summary-card {
+            padding: 1.15rem 1.25rem;
+            border: 1px solid #d8dce1;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 8px 20px rgba(23, 43, 58, 0.05);
+        }
+        .summary-card:nth-child(1) { border-top: 4px solid #e76f51; }
+        .summary-card:nth-child(2) { border-top: 4px solid #2a9d8f; }
+        .summary-card:nth-child(3) { border-top: 4px solid #f2c14e; }
+        .summary-card:nth-child(1) strong { color: #c65338; }
+        .summary-card:nth-child(2) strong { color: #207d72; }
+        .summary-card:nth-child(3) strong { color: #a67708; }
+        .summary-card strong {
+            display: block;
+        }
+        .summary-card p {
+            margin: 0 0 0.3rem;
+            color: #5b6470;
+            font-size: 0.85rem;
+        }
+        .summary-card strong {
+            color: #1f2328;
+            font-size: 1.45rem;
+            font-weight: 700;
+        }
+        .members-section {
+            overflow: hidden;
+            border: 1px solid #d8dce1;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 10px 24px rgba(23, 43, 58, 0.05);
+        }
+        .members-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.1rem 1.25rem;
+            border-bottom: 1px solid #d8dce1;
+        }
+        .members-heading h2 {
+            margin: 0;
+            color: #0f4c5c;
+            font-size: 1.1rem;
+        }
+        .members-table-wrap { overflow-x: auto; }
+        .members-table {
+            min-width: 680px;
+            margin: 0;
+        }
+        .members-table th,
+        .members-table td {
+            padding: 0.85rem 1.25rem;
+        }
+        .members-table th {
+            background: #eaf5f4;
+            color: #5b6470;
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .members-table tr:last-child td { border-bottom: none; }
+        .member-actions { min-width: 210px; }
+        .member-name { font-weight: 700; }
+        .entry-link {
+            color: #2f6f4f;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .entry-link:hover { text-decoration: underline; }
+        .extra-meal-link {
+            margin-left: 0.65rem;
+            color: #a67708;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .extra-meal-link:hover { text-decoration: underline; }
+        .remove-member-form { display: inline; margin-left: 0.65rem; }
+        .remove-member-button {
+            padding: 0;
+            background: transparent;
+            color: #b3432b;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+        .remove-member-button:hover { color: #8f3423; text-decoration: underline; }
+        .remove-modal[hidden] { display: none; }
+        .remove-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+            background: rgba(23, 43, 58, 0.48);
+        }
+        .remove-modal-card {
+            width: min(100%, 420px);
+            padding: 1.75rem;
+            border: 1px solid #f0c3b6;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 24px 60px rgba(23, 43, 58, 0.24);
+        }
+        .remove-modal-icon {
+            display: grid;
+            place-items: center;
+            width: 2.6rem;
+            height: 2.6rem;
+            margin-bottom: 1rem;
+            border-radius: 50%;
+            background: #fce9e3;
+            color: #b3432b;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+        .remove-modal-card h2 {
+            margin: 0 0 0.45rem;
+            color: #172b3a;
+            font-size: 1.35rem;
+        }
+        .remove-modal-card p { margin: 0; color: #5b6470; }
+        .remove-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.65rem;
+            margin-top: 1.5rem;
+        }
+        .remove-modal-actions button { margin: 0; }
+        .remove-modal-cancel {
+            background: #eef2f1;
+            color: #315b43;
+        }
+        .remove-modal-confirm { background: #b3432b; }
+        .remove-modal-confirm:hover { background: #8f3423; }
+        .balance-note {
+            margin: 0.75rem 0 0;
+            color: #5b6470;
+            font-size: 0.85rem;
+        }
+        .dashboard-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.7rem;
+            margin-top: 1.5rem;
+        }
+        .dashboard-actions .btn { margin: 0; }
+        .dashboard-actions .btn-primary { background: #d2693d; }
+        .dashboard-actions .btn-primary:hover { background: #b95732; }
+        .dashboard-actions .btn:not(.btn-primary) { background: #0f4c5c; }
+        .dashboard-actions .btn:not(.btn-primary):hover { background: #0a3b48; }
+        .dashboard-actions .btn-member { background: #2a9d8f; }
+        .dashboard-actions .btn-member:hover { background: #207d72; }
+        .dashboard-actions .btn-details { background: #f2c14e; color: #ffffff; }
+        .dashboard-actions .btn-details:hover { background: #d9aa2f; }
+        .dashboard-notice {
+            margin: 0 0 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 7px;
+            background: #e8f5f3;
+            color: #207d72;
+            font-weight: 600;
+        }
+        .dashboard-notice.warning { background: #fff6dc; color: #8a6805; }
+        @media (max-width: 680px) {
+            .dashboard-page { margin: 1.5rem auto; }
+            .dashboard-heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .summary-grid { grid-template-columns: 1fr; gap: 0.7rem; }
+            .month-toolbar { font-size: 0.9rem; }
+            .members-heading { padding: 1rem; }
+            .members-table th,
+            .members-table td { padding: 0.55rem 0.75rem; }
+            .members-table { font-size: 0.88rem; }
+            .members-table { min-width: 0; }
+            .members-table thead { display: none; }
+            .members-table,
+            .members-table tbody,
+            .members-table tr,
+            .members-table td { display: block; width: 100%; }
+            .members-table tr {
+                margin: 0.4rem 0.35rem;
+                padding: 0.65rem 0.75rem;
+                border: 1px solid #d8dce1;
+                border-left: 4px solid #2a9d8f;
+                border-radius: 8px;
+                background: #fff;
+                box-shadow: 0 5px 14px rgba(23, 43, 58, 0.05);
+            }
+            .members-table tr:first-child { display: none; }
+            .members-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 1rem;
+                padding: 0.3rem 0;
+                border-bottom: 1px solid #eef1ef;
+                text-align: right;
+            }
+            .members-table td::before { color: #5b6470; content: attr(data-label); font-size: 0.7rem; font-weight: 700; text-align: left; text-transform: uppercase; }
+            .members-table td:last-child { display: block; padding-top: 0.55rem; border-bottom: 0; text-align: left; }
+            .members-table .entry-link,
+            .members-table .extra-meal-link,
+            .members-table .remove-member-button { font-size: 0.78rem; }
+            .member-actions { min-width: 0; }
+        }
+    </style>
+    <section class="dashboard-page">
+        <div class="dashboard-heading">
+            <div>
+                <h1>{{ group.name }}</h1>
+            </div>
+        </div>
+
+        <nav class="month-toolbar" aria-label="Month navigation">
+            <a href="?year={{ prev_year }}&month={{ prev_month }}">&larr; Previous month</a>
+            <form method="get">
+                <label class="sr-only" for="dashboard-month">Choose month</label>
+                <select class="dashboard-month-select" id="dashboard-month" name="month_choice" onchange="this.form.submit()">
+                    {% for option in available_months %}
+                        <option value="{{ option.value }}"{% if option.value == selected_month %} selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% if is_current_month %}
+                <span class="month-next-disabled" aria-disabled="true">Next month &rarr;</span>
+            {% else %}
+                <a href="?year={{ next_year }}&month={{ next_month }}">Next month &rarr;</a>
+            {% endif %}
+        </nav>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <p>Total cost</p>
+                <strong>{{ month_cycle.cached_total_cost }}</strong>
+            </div>
+            <div class="summary-card">
+                <p>Total meals</p>
+                <strong>{{ month_cycle.cached_total_meals }}</strong>
+            </div>
+            <div class="summary-card">
+                <p>Meal rate</p>
+                <strong>{{ month_cycle.cached_meal_rate }}</strong>
+            </div>
+        </div>
+        {% if close_status == "closed" %}
+            <p class="dashboard-notice">{{ month_label }} has been closed. Entries can no longer be changed.</p>
+        {% elif close_status == "not-ready" %}
+            <p class="dashboard-notice warning">The current month cannot be closed until it has ended.</p>
+        {% endif %}
+        {% if month_cycle.is_closed %}
+            <p class="dashboard-notice">This month is closed{% if month_cycle.closed_at %} on {{ month_cycle.closed_at|date:"M j, Y" }}{% endif %}.</p>
+        {% endif %}
+
+        <section class="members-section">
+            <div class="members-heading">
+                <h2>Member balances</h2>
+                <span class="muted">{{ rows|length }} member{{ rows|length|pluralize }}</span>
+            </div>
+            <div class="members-table-wrap">
+                <table class="members-table">
+                    <tr>
+                        <th>Member</th>
+                        <th>Cost paid</th>
+                        <th>Meals</th>
+                        <th>Due</th>
+                        <th>Balance</th>
+                        <th></th>
+                    </tr>
+                    {% for row in rows %}
+                        <tr>
+                            <td class="member-name" data-label="Member">{{ row.user.username }}</td>
+                            <td data-label="Cost paid">{{ row.cost }}</td>
+                            <td data-label="Meals">{{ row.meals }}</td>
+                            <td data-label="Due">{{ row.due|floatformat:2 }}</td>
+                            <td data-label="Balance" class="{% if row.balance >= 0 %}positive{% else %}negative{% endif %}">
+                                {{ row.balance|floatformat:2 }}
+                            </td>
+                            <td class="member-actions" data-label="Actions">
+                                {% if is_leader or row.user == user %}
+                                    <a class="entry-link" href="{% url 'mess:entry_for_user' group.pk row.user.pk %}">Add Meal</a>
+                                {% endif %}
+                                {% if is_leader %}
+                                    <a class="extra-meal-link" href="{% url 'mess:extra_meal' group.pk row.user.pk %}">Extra meal</a>
+                                {% endif %}
+                                {% if is_leader and row.user != user %}
+                                    <form class="remove-member-form" method="post" action="{% url 'groups:remove_member' group.pk row.user.pk %}" data-remove-form data-member-name="{{ row.user.username|escape }}">
+                                        {% csrf_token %}
+                                        <button class="remove-member-button" type="submit">Remove</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </section>
+        <p class="balance-note">Positive balance means money is owed back. Negative balance means the member owes the group.</p>
+
+        <div class="dashboard-actions">
+            <a class="btn btn-primary" href="{% url 'mess:entry_self' group.pk %}?date={{ today|date:'Y-m-d' }}">Add today's meal status</a>
+            <a class="btn btn-details" href="{% url 'mess:meal_details' group.pk %}?year={{ month_cycle.year }}&month={{ month_cycle.month }}">Daily meal details</a>
+            {% if is_leader %}
+                <a class="btn btn-member" href="{% url 'groups:add_member' group.pk %}">Add member</a>
+                <a class="btn" href="{% url 'mess:logs' group.pk %}">View activity log</a>
+                {% if is_past_month and not month_cycle.is_closed %}
+                    <form method="post" action="{% url 'mess:close_month' group.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="year" value="{{ month_cycle.year }}">
+                        <input type="hidden" name="month" value="{{ month_cycle.month }}">
+                        <button class="btn btn-member" type="submit" data-close-month>Close month</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+    </section>
+    {% if is_leader %}
+        <div class="remove-modal" hidden role="dialog" aria-modal="true" aria-labelledby="remove-modal-title">
+            <div class="remove-modal-card">
+                <div class="remove-modal-icon" aria-hidden="true">!</div>
+                <h2 id="remove-modal-title">Remove member?</h2>
+                <p>Are you sure you want to remove <strong data-remove-member></strong> from this group?</p>
+                <div class="remove-modal-actions">
+                    <button class="remove-modal-cancel" type="button" data-remove-cancel>Cancel</button>
+                    <button class="remove-modal-confirm" type="button" data-remove-confirm>Remove member</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            (() => {
+                const modal = document.querySelector(".remove-modal");
+                const memberName = modal.querySelector("[data-remove-member]");
+                const cancelButton = modal.querySelector("[data-remove-cancel]");
+                const confirmButton = modal.querySelector("[data-remove-confirm]");
+                let pendingForm = null;
+
+                const closeModal = () => {
+                    modal.hidden = true;
+                    pendingForm = null;
+                };
+
+                document.querySelectorAll("[data-remove-form]").forEach((form) => {
+                    form.addEventListener("submit", (event) => {
+                        event.preventDefault();
+                        pendingForm = form;
+                        memberName.textContent = form.dataset.memberName;
+                        modal.hidden = false;
+                        cancelButton.focus();
+                    });
+                });
+
+                cancelButton.addEventListener("click", closeModal);
+                confirmButton.addEventListener("click", () => {
+                    if (pendingForm) {
+                        pendingForm.submit();
+                    }
+                });
+                modal.addEventListener("click", (event) => {
+                    if (event.target === modal) closeModal();
+                });
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "Escape" && !modal.hidden) closeModal();
+                });
+            })();
+        </script>
+        <div class="remove-modal" hidden role="dialog" aria-modal="true" aria-labelledby="close-month-modal-title">
+            <div class="remove-modal-card">
+                <div class="remove-modal-icon" aria-hidden="true">!</div>
+                <h2 id="close-month-modal-title">Close month?</h2>
+                <p>Close <strong>{{ month_label }}</strong>? Entries cannot be changed afterward.</p>
+                <div class="remove-modal-actions">
+                    <button class="remove-modal-cancel" type="button" data-close-cancel>Cancel</button>
+                    <button class="remove-modal-confirm" type="button" data-close-confirm>Close month</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            (() => {
+                const form = document.querySelector("[data-close-month]")?.form;
+                const modal = document.querySelector("[aria-labelledby='close-month-modal-title']");
+                if (!form || !modal) return;
+                const cancelButton = modal.querySelector("[data-close-cancel]");
+                const confirmButton = modal.querySelector("[data-close-confirm]");
+                const closeModal = () => { modal.hidden = true; };
+
+                form.addEventListener("submit", (event) => {
+                    event.preventDefault();
+                    modal.hidden = false;
+                    cancelButton.focus();
+                });
+                cancelButton.addEventListener("click", closeModal);
+                confirmButton.addEventListener("click", () => form.submit());
+                modal.addEventListener("click", (event) => {
+                    if (event.target === modal) closeModal();
+                });
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "Escape" && !modal.hidden) closeModal();
+                });
+            })();
+        </script>
+    {% endif %}
+{% endblock %}
+
+/*
+create a details page where user will be able to see how many meals every one has eaten in which day.
+
+for every month new calculation will be started. after the end of a month if all of the calculation is ok, then leader can send mail with the full calculation summary. to send mail leader will click send email button. use nodemailer. leader cannot send email until the month is completed. means he can send mail for the past months. 
+
+every user can see their monthly calculation. every month will have specific calculation, which will not be related with others month.
+
+leader can transfer the leadership to another member. after transferring the leadership, the previous leader will become a normal member.
+*/

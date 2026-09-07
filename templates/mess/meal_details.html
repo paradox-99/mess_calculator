@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Daily meal details — {{ group.name }}{% endblock %}
+{% block content %}
+    <style>
+        .details-page { max-width: 1080px; margin: 2.75rem auto; }
+        .details-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
+        .details-heading h1 { margin: 0; color: #172b3a; font-size: clamp(2rem, 5vw, 2.8rem); }
+        .details-heading p { margin: 0.4rem 0 0; }
+        .details-month { padding: 0.55rem 0.8rem; border-radius: 999px; background: #eaf5f4; color: #0f4c5c; font-weight: 700; white-space: nowrap; }
+        .details-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; padding: 0.8rem 1rem; border: 1px solid #d8dce1; border-radius: 8px; background: #f8fcfc; }
+        .details-toolbar label { margin: 0; color: #0f4c5c; font-weight: 700; }
+        .month-select { width: auto; min-width: 170px; max-width: none; padding: 0.55rem 0.7rem; border-color: #b8d5d2; border-radius: 6px; background: #fff; color: #172b3a; font-weight: 600; }
+        .details-panel { overflow: hidden; border: 1px solid #d8dce1; border-radius: 10px; background: #fff; box-shadow: 0 12px 28px rgba(23, 43, 58, 0.06); }
+        .details-table-wrap { overflow-x: auto; }
+        .details-table { min-width: 620px; margin: 0; }
+        .details-table th, .details-table td { padding: 0.7rem 0.8rem; border: 1px solid #d8dce1; }
+        .details-table thead th { background: #0f4c5c; color: #fff; font-size: 0.78rem; letter-spacing: 0.04em; text-align: center; }
+        .details-table thead th:first-child { background: #172b3a; text-align: left; }
+        .details-table tbody tr:nth-child(even) { background: #fbfdfc; }
+        .details-date { width: 6rem; color: #5b6470; font-weight: 700; white-space: nowrap; }
+        .member-heading { display: block; font-size: 0.9rem; }
+        .meal-legend { display: block; margin-top: 0.25rem; color: #b7dfe0; font-size: 0.68rem; font-weight: 500; }
+        .member-cell { min-width: 8.5rem; text-align: center; vertical-align: middle; }
+        .meal-checks { display: flex; justify-content: center; gap: 0.45rem; }
+        .meal-check { display: inline-grid; place-items: center; width: 1.7rem; height: 1.7rem; border: 1px solid #c7d4d1; border-radius: 50%; background: #f5f8f7; color: #aebbb8; font-size: 0.85rem; font-weight: 800; }
+        .meal-check.eaten { border-color: #23845d; background: #23845d; color: #fff; box-shadow: 0 3px 8px rgba(35, 132, 93, 0.25); }
+        .extra-summary { margin-top: 1rem; padding: 1rem 1.15rem; border: 1px solid #e5d6a8; border-radius: 10px; background: #fffdf4; }
+        .extra-summary h2 { margin: 0 0 0.75rem; color: #8a6805; font-size: 1rem; }
+        .extra-summary-list { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+        .extra-summary-item { padding: 0.45rem 0.7rem; border-radius: 999px; background: #f2c14e; color: #172b3a; font-size: 0.85rem; font-weight: 700; }
+        .details-empty { padding: 2.5rem 1rem; color: #5b6470; text-align: center; }
+        .details-back { display: inline-block; margin-top: 1.25rem; color: #2f6f4f; font-weight: 700; text-decoration: none; }
+        @media (max-width: 680px) { .details-page { margin: 1.5rem auto; } .details-heading { align-items: flex-start; flex-direction: column; } .details-toolbar { align-items: flex-start; flex-direction: column; } .month-select { width: 100%; } }
+    </style>
+    <section class="details-page">
+        <div class="details-heading">
+            <div>
+                <h1>Daily meal details</h1>
+                <p class="muted">{{ group.name }} — every member's meals for this month.</p>
+            </div>
+            <span class="details-month">{{ month_label }}</span>
+        </div>
+        <form class="details-toolbar" method="get">
+            <label for="details-month">Choose a month</label>
+            <select class="month-select" id="details-month" name="month_choice" onchange="this.form.submit()">
+                {% for option in available_months %}
+                    <option value="{{ option.value }}"{% if option.value == selected_month %} selected{% endif %}>{{ option.label }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <section class="details-panel">
+            {% if members %}
+                <div class="details-table-wrap">
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                {% for member in members %}
+                                    <th><span class="member-heading">{{ member.username }}</span><span class="meal-legend">Lunch / Dinner</span></th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in detail_rows %}
+                                <tr>
+                                    <td class="details-date">{{ row.date|date:"j" }} <span class="muted">{{ row.date|date:"D" }}</span></td>
+                                    {% for entry in row.cells %}
+                                        <td class="member-cell">
+                                            {% if entry %}
+                                                <div class="meal-checks" aria-label="{{ entry.user.username }} meals on {{ entry.date }}">
+                                                    <span class="meal-check{% if entry.lunch > 0 %} eaten{% endif %}">{% if entry.lunch > 0 %}&check;{% else %}&middot;{% endif %}</span>
+                                                    <span class="meal-check{% if entry.dinner > 0 %} eaten{% endif %}">{% if entry.dinner > 0 %}&check;{% else %}&middot;{% endif %}</span>
+                                                </div>
+                                            {% else %}
+                                                <div class="meal-checks" aria-label="No meals recorded"><span class="meal-check">&middot;</span><span class="meal-check">&middot;</span></div>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="details-empty">No meal entries have been recorded for {{ month_label }}.</div>
+            {% endif %}
+        </section>
+        <section class="extra-summary" aria-label="Extra meals by member">
+            <h2>Extra meals this month</h2>
+            <div class="extra-summary-list">
+                {% for item in extra_meals %}
+                    <span class="extra-summary-item">{{ item.user.username }}: {{ item.count }}</span>
+                {% endfor %}
+            </div>
+        </section>
+        <a class="details-back" href="{% url 'mess:dashboard' group.pk %}?year={{ year }}&month={{ month }}">&larr; Back to dashboard</a>
+    </section>
+{% endblock %}

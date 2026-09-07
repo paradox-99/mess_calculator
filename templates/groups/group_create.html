@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Create a group{% endblock %}
+{% block content %}
+    <style>
+        .group-form-page { max-width: 560px; margin: 2.5rem auto; }
+        .group-form-page form { max-width: 420px; }
+        @media (max-width: 680px) { .group-form-page { margin: 1.5rem auto; } }
+    </style>
+    <section class="group-form-page">
+    <h1>Create a group</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <p>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+            </p>
+        {% endfor %}
+        <button type="submit">Create</button>
+    </form>
+    </section>
+{% endblock %}

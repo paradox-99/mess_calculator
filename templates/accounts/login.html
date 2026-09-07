@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Log in — Mess Calculator{% endblock %}
+{% block content %}
+    <style>
+        .login-page {
+            max-width: 520px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
+        .login-shell {
+            background: #fff;
+            border: 1px solid #d8dce1;
+            border-radius: 12px;
+            box-shadow: 0 18px 45px rgba(31, 35, 40, 0.08);
+        }
+        .login-form {
+            padding: 2.5rem clamp(1.5rem, 5vw, 4rem);
+        }
+        .login-form h1 {
+            margin: 0 0 0.35rem;
+            font-size: 1.5rem;
+        }
+        .login-form > .muted {
+            display: block;
+            margin-bottom: 1.8rem;
+        }
+        .login-form form p {
+            margin: 0 0 1rem;
+        }
+        .login-form label {
+            margin-bottom: 0.4rem;
+            color: #1f2328;
+            font-weight: 600;
+        }
+        .login-form input {
+            max-width: none;
+            padding: 0.7rem 0.8rem;
+            border-color: #c6ccd1;
+            border-radius: 6px;
+            background: #fcfcfa;
+            transition: border-color 160ms ease, box-shadow 160ms ease;
+        }
+        .login-form input:focus {
+            border-color: #2f6f4f;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(47, 111, 79, 0.14);
+        }
+        .login-form .errorlist {
+            margin: 0.35rem 0 0;
+            font-size: 0.85rem;
+        }
+        .login-form button {
+            width: 100%;
+            margin-top: 0.4rem;
+            padding: 0.75rem 1rem;
+            background: #d2693d;
+            border-radius: 6px;
+            font-weight: 700;
+            transition: background 160ms ease, transform 160ms ease;
+        }
+        .login-form button:hover {
+            background: #b95732;
+            transform: translateY(-1px);
+        }
+        .login-form .account-link {
+            margin: 1.4rem 0 0;
+            text-align: center;
+        }
+        .login-form a {
+            color: #2f6f4f;
+            font-weight: 700;
+        }
+        @media (max-width: 680px) {
+            .login-page {
+                display: flex;
+                align-items: center;
+                min-height: calc(100vh - 7rem);
+                margin: 0 auto;
+            }
+            .login-shell { width: 100%; }
+            .login-form {
+                padding: 1.5rem;
+                font-size: 0.9rem;
+            }
+            .login-form h1 { font-size: 1.35rem; }
+            .login-form > .muted,
+            .login-form .account-link { font-size: 0.82rem; }
+            .login-form > .muted { margin-bottom: 1.35rem; }
+            .login-form form p { margin-bottom: 0.8rem; }
+            .login-form label { font-size: 0.85rem; }
+            .login-form input { padding: 0.6rem 0.7rem; font-size: 0.9rem; }
+            .login-form button { padding: 0.65rem 1rem; font-size: 0.9rem; }
+        }
+    </style>
+    <section class="login-page">
+        <div class="login-shell">
+            <div class="login-form">
+                <h1>Log in</h1>
+                <span class="muted">Welcome back to Mess Calculator.</span>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    {% for field in form %}
+                        <p>
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {{ field.errors }}
+                        </p>
+                    {% endfor %}
+                    <button type="submit">Log in</button>
+                </form>
+                <p class="muted account-link">New here? <a href="{% url 'signup' %}">Create an account</a></p>
+            </div>
+        </div>
+    </section>
+{% endblock %}

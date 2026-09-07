@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Activity log — {{ group.name }}{% endblock %}
+{% block content %}
+    <style>
+        .logs-page {
+            max-width: 1100px;
+            margin: 2.75rem auto;
+        }
+        .logs-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1rem;
+            margin-bottom: 1.75rem;
+        }
+        .logs-heading h1 {
+            margin: 0;
+            color: #172b3a;
+            font-size: clamp(2rem, 5vw, 2.8rem);
+            letter-spacing: -0.03em;
+        }
+        .logs-heading p { margin: 0.45rem 0 0; }
+        .logs-count {
+            padding: 0.45rem 0.75rem;
+            border: 1px solid #d6e6ad;
+            border-radius: 999px;
+            background: #f2f7e8;
+            color: #315b43;
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .logs-panel {
+            overflow: hidden;
+            border: 1px solid #d8dce1;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 12px 28px rgba(23, 43, 58, 0.06);
+        }
+        .logs-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #d8dce1;
+            background: #f8fcfc;
+        }
+        .logs-panel-header strong { color: #0f4c5c; }
+        .logs-panel-header span { color: #5b6470; font-size: 0.85rem; }
+        .logs-table-wrap { overflow-x: auto; }
+        .logs-table {
+            min-width: 820px;
+            margin: 0;
+        }
+        .logs-table th,
+        .logs-table td { padding: 0.85rem 1rem; }
+        .logs-table th {
+            background: #eaf5f4;
+            color: #5b6470;
+            font-size: 0.76rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .logs-table td { color: #28343c; }
+        .logs-table tbody tr:hover { background: #fffaf0; }
+        .log-time,
+        .log-date { color: #5b6470 !important; white-space: nowrap; }
+        .log-user { font-weight: 700; }
+        .log-action,
+        .log-field {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+        .log-action { background: #fce9e3; color: #a7432d; }
+        .log-field { background: #e8f5f3; color: #207d72; }
+        .log-value { font-weight: 700; }
+        .logs-empty {
+            padding: 2.5rem 1.25rem;
+            color: #5b6470;
+            text-align: center;
+        }
+        .logs-back {
+            display: inline-block;
+            margin-top: 1.25rem;
+            color: #2f6f4f;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .logs-back:hover { text-decoration: underline; }
+        @media (max-width: 680px) {
+            .logs-page { margin: 1.5rem auto; }
+            .logs-heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .logs-panel-header { padding: 0.9rem 1rem; }
+            .logs-table th,
+            .logs-table td { padding: 0.75rem 0.8rem; }
+        }
+    </style>
+    <section class="logs-page">
+        <div class="logs-heading">
+            <div>
+                <h1>Activity log</h1>
+                <p class="muted">{{ group.name }} — every edit to every member's entries, newest first.</p>
+            </div>
+            <span class="logs-count">{{ logs|length }} entr{{ logs|length|pluralize:"y,ies" }}</span>
+        </div>
+
+        <section class="logs-panel">
+            <div class="logs-panel-header">
+                <strong>Recent changes</strong>
+                <span>Audited automatically</span>
+            </div>
+            {% if logs %}
+                <div class="logs-table-wrap">
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>When</th>
+                                <th>Actor</th>
+                                <th>Target</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                                <th>Field</th>
+                                <th>Old</th>
+                                <th>New</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                                <tr>
+                                    <td class="log-time">{{ log.timestamp|date:"Y-m-d H:i" }}</td>
+                                    <td class="log-user">{{ log.actor.username }}</td>
+                                    <td class="log-user">{{ log.target_user.username }}</td>
+                                    <td class="log-date">{{ log.entry_date }}</td>
+                                    <td><span class="log-action">{{ log.get_action_display }}</span></td>
+                                    <td><span class="log-field">{{ log.field_name }}</span></td>
+                                    <td>{{ log.old_value|default:"—" }}</td>
+                                    <td class="log-value">{{ log.new_value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="logs-empty">No activity has been recorded yet.</div>
+            {% endif %}
+        </section>
+
+        <a class="logs-back" href="{% url 'mess:dashboard' group.pk %}">&larr; Back to dashboard</a>
+    </section>
+{% endblock %}

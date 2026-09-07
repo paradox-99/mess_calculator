@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}Mess Calculator — Shared meals, settled simply{% endblock %}
+{% block content %}
+    <style>
+        .home-page {
+            max-width: 1120px;
+            margin: 1rem auto 4rem;
+            color: #172b3a;
+        }
+        .home-hero {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+            gap: 3rem;
+            align-items: center;
+            min-height: 470px;
+            padding: clamp(2rem, 6vw, 5rem);
+            overflow: hidden;
+            border-radius: 18px;
+            background: #0f4c5c;
+        }
+        .home-hero::before,
+        .home-hero::after {
+            position: absolute;
+            border-radius: 50%;
+            content: "";
+            pointer-events: none;
+        }
+        .home-hero::before {
+            top: -8rem;
+            right: 24%;
+            width: 18rem;
+            height: 18rem;
+            background: #f2c14e;
+            opacity: 0.95;
+        }
+        .home-hero::after {
+            right: -5rem;
+            bottom: -8rem;
+            width: 24rem;
+            height: 24rem;
+            background: #e76f51;
+        }
+        .hero-copy,
+        .hero-board { position: relative; z-index: 1; }
+        .hero-eyebrow {
+            margin: 0 0 1.2rem;
+            color: #f2c14e;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+        .hero-copy h1 {
+            max-width: 600px;
+            margin: 0;
+            color: #fffdf7;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(2.8rem, 7vw, 5.7rem);
+            font-weight: 400;
+            line-height: 0.98;
+        }
+        .hero-copy p {
+            max-width: 510px;
+            margin: 1.5rem 0 2rem;
+            color: #d7edf0;
+            font-size: 1.08rem;
+        }
+        .home-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .home-actions a {
+            display: inline-block;
+            padding: 0.8rem 1.15rem;
+            border-radius: 6px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .home-primary { background: #e76f51; color: #fff; }
+        .home-primary:hover { background: #d45c40; }
+        .home-secondary { border: 1px solid #a7d8dc; color: #effbfc; }
+        .home-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+        .hero-board {
+            padding: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            border-radius: 12px;
+            background: rgba(255, 253, 247, 0.94);
+            box-shadow: 0 22px 40px rgba(9, 42, 52, 0.24);
+            transform: rotate(2deg);
+        }
+        .board-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 0.9rem;
+            border-bottom: 1px solid #d8e2df;
+        }
+        .board-top strong { color: #172b3a; }
+        .board-month { color: #e76f51; font-size: 0.8rem; font-weight: 800; }
+        .board-row {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr 0.8fr;
+            gap: 0.5rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e8eeeb;
+            color: #537078;
+            font-size: 0.9rem;
+        }
+        .board-row strong { color: #172b3a; }
+        .board-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border-radius: 6px;
+            background: #f2c14e;
+            color: #172b3a;
+            font-weight: 800;
+        }
+        .home-section {
+            padding: 4.5rem 0 1rem;
+        }
+        .section-heading {
+            max-width: 560px;
+            margin-bottom: 2rem;
+        }
+        .section-heading h2 {
+            margin: 0 0 0.6rem;
+            color: #172b3a;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 400;
+        }
+        .section-heading p { margin: 0; color: #537078; }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        .feature-card {
+            min-height: 180px;
+            padding: 1.5rem;
+            border-top: 5px solid #e76f51;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(23, 43, 58, 0.07);
+        }
+        .feature-card:nth-child(2) { border-top-color: #2a9d8f; }
+        .feature-card:nth-child(3) { border-top-color: #f2c14e; }
+        .feature-number {
+            color: #e76f51;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+        }
+        .feature-card:nth-child(2) .feature-number { color: #2a9d8f; }
+        .feature-card:nth-child(3) .feature-number { color: #bd8a0c; }
+        .feature-card h3 { margin: 0.9rem 0 0.5rem; font-size: 1.15rem; }
+        .feature-card p { margin: 0; color: #537078; font-size: 0.92rem; }
+        .home-footer-note {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 4rem;
+            padding: 1.2rem 1.4rem;
+            border-radius: 8px;
+            background: #172b3a;
+            color: #d7edf0;
+        }
+        .home-footer-note p { margin: 0; }
+        .home-footer-note a { color: #f2c14e; font-weight: 800; }
+        @media (max-width: 760px) {
+            .home-page { margin-top: 0; }
+            .home-hero {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                min-height: 0;
+                padding: 2rem 1.5rem 2.5rem;
+            }
+            .hero-board { transform: none; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .home-section { padding-top: 3.5rem; }
+            .home-footer-note { align-items: flex-start; flex-direction: column; }
+            .board-top { align-items: flex-start; flex-direction: column; }
+            .board-row { grid-template-columns: 1fr 1fr; }
+            .board-row span:last-child { text-align: right; }
+        }
+    </style>
+    <div class="home-page">
+        <section class="home-hero">
+            <div class="hero-copy">
+                <p class="hero-eyebrow">Shared meals, settled simply</p>
+                <h1>Less counting. More eating.</h1>
+                <p>Mess Calculator keeps your group meals, costs, and balances clear, so everyone knows where they stand.</p>
+                <div class="home-actions">
+                    {% if user.is_authenticated %}
+                        <a class="home-primary" href="{% url 'groups:list' %}">Open your mess</a>
+                    {% else %}
+                        <a class="home-primary" href="{% url 'signup' %}">Start a mess</a>
+                        <a class="home-secondary" href="{% url 'login' %}">Log in</a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="hero-board" aria-label="Example monthly meal summary">
+                <div class="board-top">
+                    <strong>Flat 6B</strong>
+                    <span class="board-month">SEPTEMBER 2026</span>
+                </div>
+                <div class="board-row"><strong>Nayeem</strong><span>24 meals</span><span>৳ 840</span></div>
+                <div class="board-row"><strong>Jhon</strong><span>21 meals</span><span>৳ 735</span></div>
+                <div class="board-row"><strong>Rafi</strong><span>18 meals</span><span>৳ 630</span></div>
+                <div class="board-total"><span>Meal rate</span><span>৳ 35.00</span></div>
+            </div>
+        </section>
+
+        <section class="home-section">
+            <div class="section-heading">
+                <h2>A calmer way to run a shared mess.</h2>
+                <p>Record the everyday details once, then let everyone see the useful picture at a glance.</p>
+            </div>
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <span class="feature-number">01 / TRACK</span>
+                    <h3>Meals made visible</h3>
+                    <p>Mark lunch and dinner as they happen and keep the month’s meal count honest.</p>
+                </article>
+                <article class="feature-card">
+                    <span class="feature-number">02 / SHARE</span>
+                    <h3>One shared record</h3>
+                    <p>Keep group members, costs, and entries together instead of scattered across chats.</p>
+                </article>
+                <article class="feature-card">
+                    <span class="feature-number">03 / SETTLE</span>
+                    <h3>Balances without guesswork</h3>
+                    <p>See who owes and who gets money back with a simple monthly balance.</p>
+                </article>
+            </div>
+        </section>
+
+        <div class="home-footer-note">
+            <p>Ready to make your next month easier?</p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'groups:list' %}">Go to your groups &rarr;</a>
+            {% else %}
+                <a href="{% url 'signup' %}">Create your account &rarr;</a>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
